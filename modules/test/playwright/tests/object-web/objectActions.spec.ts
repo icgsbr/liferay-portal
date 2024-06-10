@@ -4,12 +4,16 @@
  */
 
 import {expect, mergeTests} from '@playwright/test';
+import path from 'node:path';
 
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {editObjectDefinitionPagesTest} from '../../fixtures/editObjectDefinitionPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {objectPagesTest} from '../../fixtures/objectPagesTest';
 import {getRandomInt} from '../../utils/getRandomInt';
+import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
+import { mock } from 'node:test';
+import { mockedObjectFields } from './dependencies/objectMockedFields';
 
 export const test = mergeTests(
 	apiHelpersTest,
@@ -17,6 +21,54 @@ export const test = mergeTests(
 	loginTest(),
 	objectPagesTest
 );
+
+interface CreatedEntities {
+	notificationQueueEntryIds: number[];
+	notificationTemplateIds: number[];
+	objectDefinitonIds: number[];
+}
+
+let createdEntities: Partial<CreatedEntities> = {};
+
+test.afterEach(async ({apiHelpers}) => {
+	if (createdEntities.objectDefinitonIds?.length) {
+		for (
+			let index = 0;
+			index < createdEntities.objectDefinitonIds.length;
+			index++
+		) {
+			await apiHelpers.objectAdmin.deleteObjectDefinition(
+				createdEntities.objectDefinitonIds[index]
+			);
+		}
+	}
+
+	if (createdEntities.notificationQueueEntryIds?.length) {
+		for (
+			let index = 0;
+			index < createdEntities.notificationQueueEntryIds.length;
+			index++
+		) {
+			await apiHelpers.notification.deleteNotificationQueueEntry(
+				createdEntities.notificationQueueEntryIds[index]
+			);
+		}
+	}
+
+	if (createdEntities.notificationTemplateIds?.length) {
+		for (
+			let index = 0;
+			index < createdEntities.notificationTemplateIds.length;
+			index++
+		) {
+			await apiHelpers.notification.deleteNotificationTemplate(
+				createdEntities.notificationTemplateIds[index]
+			);
+		}
+	}
+
+	createdEntities = {};
+});
 
 test.describe('manage object actions through object actions tab', () => {
 	test('notification action section must display all persisted notifications', async ({
@@ -28,7 +80,7 @@ test.describe('manage object actions through object actions tab', () => {
 		viewObjectActionsPage,
 		viewObjectDefinitionsPage,
 	}) => {
-		const ids: number[] = [];
+		const notificationTemplateIds: number[] = [];
 		const names: string[] = [];
 
 		for (let index = 1; index <= 21; index++) {
@@ -36,17 +88,21 @@ test.describe('manage object actions through object actions tab', () => {
 				await apiHelpers.notification.postRandomNotificationTemplate(
 					'notification template test ' + getRandomInt()
 				);
-			ids.push(notificationTemplate.id);
+			notificationTemplateIds.push(notificationTemplate.id);
 			names.push(
 				notificationTemplate.name + ' ' + notificationTemplate.type
 			);
 		}
+
+		createdEntities.notificationTemplateIds = notificationTemplateIds;
 
 		const objectDefinition =
 			await apiHelpers.objectAdmin.postRandomObjectDefinition({
 				objectFolderExternalReferenceCode: 'default',
 				status: {code: 0},
 			});
+
+		createdEntities.objectDefinitonIds = [objectDefinition.id];
 
 		await viewObjectDefinitionsPage.goto();
 
@@ -71,17 +127,99 @@ test.describe('manage object actions through object actions tab', () => {
 					.getByRole('option', {name: names[index]})
 			).toBeVisible();
 		}
+	});
+});
 
-		// Clean up
+test('can send notification email via download action', async ({
+	apiHelpers,
+	page,
+	viewObjectEntriesPage,
+}) => {
 
-		await apiHelpers.objectAdmin.deleteObjectDefinition(
-			objectDefinition.id
+	// Create email notification template
+
+	const senderEmail: string = 'test' + getRandomInt() + '@liferay.com';
+
+	const notificationTemplate =
+		await apiHelpers.notification.postRandomNotificationTemplate(
+			'notification template test ' + getRandomInt(),
+			senderEmail
 		);
 
-		for (let index = 0; index < ids.length; index++) {
-			await apiHelpers.notification.deleteNotificationTemplate(
-				ids[index]
-			);
-		}
+	createdEntities.notificationTemplateIds = [notificationTemplate.id];
+
+	// Create object definition with an attachment field
+
+	const objectDefinition = await apiHelpers.objectAdmin.postRandomObjectDefinition({
+		objectFields: [mockedObjectFields.attchmentFieldDocumentAndMedia],
+		objectFolderExternalReferenceCode: 'default',
+		status: {code: 0},
 	});
+
+	createdEntities.objectDefinitonIds = [objectDefinition.id];
+
+	// Create an action to send notification after attachment download
+
+	await apiHelpers.objectAdmin.postObjectActionByExternalReferenceCode(
+		objectDefinition.externalReferenceCode,
+		{
+			active: true,
+			label: {
+				en_US: 'downloadAttachmentArchive',
+			},
+			name: 'downloadAttachmentArchive',
+			objectActionExecutorKey: 'notification',
+			objectActionTriggerKey: 'onAfterAttachmentDownload',
+			parameters: {
+				notificationTemplateId: notificationTemplate.id,
+				type: 'email',
+			},
+		}
+	);
+
+	// Create an object entry
+
+	await viewObjectEntriesPage.goto(objectDefinition.id);
+
+	await viewObjectEntriesPage.clickAddObjectEntry();
+
+	const fileChooserPromise = page.waitForEvent('filechooser');
+
+	await viewObjectEntriesPage.selectFileButton.click();
+
+	const fileChooser = await fileChooserPromise;
+
+	await fileChooser.setFiles(
+		path.join(__dirname, 'dependencies', 'sampleFile.txt')
+	);
+
+	await viewObjectEntriesPage.page
+		.getByText('sampleFile.txt')
+		.waitFor({state: 'visible'});
+
+	await viewObjectEntriesPage.saveObjectEntryButton.click();
+
+	await waitForSuccessAlert(page);
+
+	// Download attachment from object entry
+
+	await viewObjectEntriesPage.goto(objectDefinition.id);
+
+	await page
+		.getByRole('button', {name: 'Search'})
+		.waitFor({state: 'visible'});
+
+	await viewObjectEntriesPage.page.getByText('sampleFile.txt').click();
+
+	// Verify if the email was sent
+
+	const notificationQueueEntries =
+		await apiHelpers.notification.getNotificationQueueEntriesPage(
+			senderEmail
+		);
+
+	createdEntities.notificationQueueEntryIds =
+		notificationQueueEntries.items.map((item: any) => item.id);
+
+	expect(notificationQueueEntries.items.length).toBeTruthy();
 });

@@ -74,6 +74,7 @@ interface ObjectActionParameters {
 	script?: string;
 	secret?: string;
 	system?: boolean;
+	type?: string;
 	url?: string;
 }
 
