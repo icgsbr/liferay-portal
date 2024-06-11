@@ -523,3 +523,75 @@ test.describe('Manage object entries through View Object Entries', () => {
 		);
 	});
 });
+
+test('wip test', async ({apiHelpers, viewObjectEntriesPage}) => {
+
+	// Create object definition with an attachment field
+
+	const objectDefinition = await apiHelpers.objectAdmin.postObjectDefinition({
+		active: true,
+		externalReferenceCode: 'customObjectERC',
+		label: {
+			en_US: 'customobject',
+		},
+		name: 'CustomObject',
+		objectFields: [
+			{
+				DBType: 'Long',
+				businessType: 'Attachment',
+				externalReferenceCode: 'testAttachment',
+				indexed: true,
+				indexedAsKeyword: false,
+				indexedLanguageId: '',
+				label: {
+					en_US: 'testAttachment',
+				},
+				listTypeDefinitionId: 0,
+				name: 'testAttachment',
+				objectFieldSettings: [
+					{
+						name: 'acceptedFileExtensions',
+						value: 'jpeg, jpg, pdf, png, txt',
+					},
+					{
+						name: 'maximumFileSize',
+						value: 1,
+					},
+					{
+						name: 'fileSource',
+						value: 'documentsAndMedia',
+					},
+				],
+				required: false,
+				state: false,
+				system: false,
+				type: 'Long',
+				unique: false,
+			},
+		],
+		pluralLabel: {
+			en_US: 'customobjects',
+		},
+		portlet: true,
+		scope: 'company',
+		status: {
+			code: 0,
+		},
+	});
+
+	// Add an entry to the created definition
+
+	await viewObjectEntriesPage.goto(objectDefinition.id, 'ar');
+
+	await viewObjectEntriesPage.clickAddObjectEntry();
+
+	await viewObjectEntriesPage.selectFileFromDocumentsAndMediaArabic();
+
+	await viewObjectEntriesPage.saveObjectEntryButtonArabic.click();
+
+	// Verify the success message
+
+	// This will be change to a proper expect statement later
+
+	await expect(viewObjectEntriesPage.successMessageArabic).toBeVisible();
+});
