@@ -25,9 +25,9 @@ export class ViewObjectEntriesPage {
 	readonly successMessageArabic: Locator;
 
 	constructor(page: Page) {
-		this.addObjectEntryButton = page
-			.getByTestId('fdsCreationActionButton')
-			.first();
+		this.addObjectEntryButton = page.locator(
+			'.management-bar .btn-primary'
+		);
 		this.backButton = page.getByTitle('Back');
 		this.duplicateEntryErrorMessage = page.getByText(
 			'Error:The field values are already in use. Please choose unique values.'
