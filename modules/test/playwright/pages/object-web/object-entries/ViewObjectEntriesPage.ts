@@ -40,18 +40,20 @@ export class ViewObjectEntriesPage {
 			.frameLocator('iframe');
 		this.richTextInput = this.richTextIFrame.getByRole('textbox');
 		this.saveObjectEntryButton = page.getByRole('button', {name: 'Save'});
-		this.saveObjectEntryButtonArabic = page.getByRole('button', {name: 'إحفظ'});
+		this.saveObjectEntryButtonArabic = page.getByRole('button', {
+			name: 'إحفظ',
+		});
 		this.selectFileButton = page.getByRole('button', {name: 'Select File'});
-		this.selectFileButtonArabic = page.getByRole('button', {name: 'إختر مجلّد'});
+		this.selectFileButtonArabic = page.getByRole('button', {
+			name: 'إختر مجلّد',
+		});
 		this.selectFileIframe = page.frameLocator(
 			'iframe[title="Select File"]'
 		);
 		this.successMessage = page.getByText(
 			'Your request completed successfully.'
 		);
-		this.successMessageArabic = page.getByText(
-			'نجاح:تم تنفيذ طلبك بنجاح.'
-		);
+		this.successMessageArabic = page.getByText('نجاح:تم تنفيذ طلبك بنجاح.');
 	}
 
 	async assertErrorWithDuplicateEntryValue() {
@@ -123,7 +125,7 @@ export class ViewObjectEntriesPage {
 		await this.selectFileButtonArabic.click();
 
 		await this.selectFileIframe
-		.getByRole('link', { name: 'المواقع والمكتبات' })
+			.getByRole('link', {name: 'المواقع والمكتبات'})
 			.click();
 
 		await this.selectFileIframe
@@ -142,7 +144,11 @@ export class ViewObjectEntriesPage {
 			.click();
 	}
 
-	async goto(objectDefinitionId: number, regionalCode?: string, siteUrl?: Site['friendlyUrlPath']) {
+	async goto(
+		objectDefinitionId: number,
+		regionalCode?: string,
+		siteUrl?: Site['friendlyUrlPath']
+	) {
 		if (!regionalCode) {
 			regionalCode = 'en';
 		}
