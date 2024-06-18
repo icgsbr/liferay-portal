@@ -20,6 +20,7 @@ export class ViewObjectEntriesPage {
 	readonly selectFileButton: Locator;
 	readonly selectFileButtonArabic: Locator;
 	readonly selectFileIframe: FrameLocator;
+	readonly selectFileIframeArabic: FrameLocator;
 	readonly successMessage: Locator;
 	readonly successMessageArabic: Locator;
 
@@ -49,6 +50,9 @@ export class ViewObjectEntriesPage {
 		});
 		this.selectFileIframe = page.frameLocator(
 			'iframe[title="Select File"]'
+		);
+		this.selectFileIframeArabic = page.frameLocator(
+			'iframe[title="إختر مجلّد"]'
 		);
 		this.successMessage = page.getByText(
 			'Your request completed successfully.'
@@ -124,19 +128,19 @@ export class ViewObjectEntriesPage {
 	async selectFileFromDocumentsAndMediaArabic() {
 		await this.selectFileButtonArabic.click();
 
-		await this.selectFileIframe
+		await this.selectFileIframeArabic
 			.getByRole('link', {name: 'المواقع والمكتبات'})
 			.click();
 
-		await this.selectFileIframe
+		await this.selectFileIframeArabic
 			.getByRole('link', {name: 'Liferay DXP'})
 			.click();
 
-		await this.selectFileIframe
+		await this.selectFileIframeArabic
 			.getByRole('link', {name: 'Provided by Liferay'})
 			.click();
 
-		await this.selectFileIframe
+		await this.selectFileIframeArabic
 			.locator(
 				'[id="_com_liferay_item_selector_web_portlet_ItemSelectorPortlet_repositoryEntriesSearchContainer"] img'
 			)
