@@ -28,6 +28,7 @@ public class DDMFieldUpgradeProcess extends UpgradeProcess {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
 					"select DDMStorageLink.classPK, ",
+					"DDMStorageLink.ctCollectionId, ",
 					"DDMStorageLink.structureVersionId from DDMStorageLink ",
 					"inner join DDMStructure on DDMStorageLink.structureId = ",
 					"DDMStructure.structureId where DDMStructure.structureKey ",
@@ -39,8 +40,8 @@ public class DDMFieldUpgradeProcess extends UpgradeProcess {
 						"update DDMField set parentFieldId = ? where ",
 						"DDMField.storageId = ? and ",
 						"DDMField.structureVersionId = ? and ",
-						"DDMField.fieldName like ? and DDMField.priority = ",
-						"?"))) {
+						"DDMField.fieldName like ? and DDMField.priority = ? ",
+						"and DDMField.ctCollectionId = ?"))) {
 
 			preparedStatement1.setString(1, "CUSTOM-META-TAGS");
 
@@ -73,6 +74,8 @@ public class DDMFieldUpgradeProcess extends UpgradeProcess {
 						preparedStatement2.setString(4, "content");
 						preparedStatement2.setLong(
 							5, resultSet2.getLong("priority") + 1);
+						preparedStatement2.setLong(
+							6, resultSet2.getLong("ctCollectionId"));
 
 						preparedStatement2.addBatch();
 					}
@@ -86,7 +89,8 @@ public class DDMFieldUpgradeProcess extends UpgradeProcess {
 	private void _upgradeDDMStorageLinks() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				StringBundler.concat(
-					"select DDMStructureVersion.structureId, ",
+					"select DDMStructureVersion.ctCollectionId, ",
+					"DDMStructureVersion.structureId, ",
 					"DDMStorageLink.storageLinkId from DDMStorageLink inner ",
 					"join DDMStructureVersion on ",
 					"DDMStructureVersion.structureVersionId = ",
@@ -96,12 +100,13 @@ public class DDMFieldUpgradeProcess extends UpgradeProcess {
 				AutoBatchPreparedStatementUtil.autoBatch(
 					connection,
 					"update DDMStorageLink set structureId = ? where " +
-						"storageLinkId = ?");
+						"storageLinkId = ? and ctCollectionId = ?");
 			ResultSet resultSet = preparedStatement1.executeQuery()) {
 
 			while (resultSet.next()) {
 				preparedStatement2.setLong(1, resultSet.getLong(1));
 				preparedStatement2.setLong(2, resultSet.getLong(2));
+				preparedStatement2.setLong(3, resultSet.getLong(3));
 
 				preparedStatement2.addBatch();
 			}
