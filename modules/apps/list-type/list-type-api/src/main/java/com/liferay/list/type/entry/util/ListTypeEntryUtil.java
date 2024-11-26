@@ -7,6 +7,7 @@ package com.liferay.list.type.entry.util;
 
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalServiceUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Locale;
@@ -44,6 +45,27 @@ public class ListTypeEntryUtil {
 		listTypeEntry.setNameMap(nameMap);
 
 		return listTypeEntry;
+	}
+
+	public static ListTypeEntry createListTypeEntry(
+		String externalReferenceCode, String key, Map<Locale, String> nameMap,
+		User user) {
+
+		ListTypeEntry listTypeEntry =
+			ListTypeEntryLocalServiceUtil.createListTypeEntry(0L);
+
+		listTypeEntry.setExternalReferenceCode(externalReferenceCode);
+		listTypeEntry.setUserId(user.getUserId());
+		listTypeEntry.setUserName(user.getFullName());
+		listTypeEntry.setKey(key);
+		listTypeEntry.setNameMap(nameMap);
+
+		return listTypeEntry;
+	}
+
+	public static ListTypeEntry createListTypeEntry(String key, User user) {
+		return createListTypeEntry(
+			null, key, LocalizedMapUtil.getLocalizedMap(key), user);
 	}
 
 	public static String getListTypeEntryExternalReferenceCode(

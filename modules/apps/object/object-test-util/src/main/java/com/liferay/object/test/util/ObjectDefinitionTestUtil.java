@@ -11,6 +11,7 @@ import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -40,6 +41,15 @@ public class ObjectDefinitionTestUtil {
 
 		return addCustomObjectDefinition(
 			0, enableLocalization, getRandomName(), objectFields);
+	}
+
+	public static ObjectDefinition addCustomObjectDefinition(
+			boolean enableLocalization, List<ObjectField> objectFields,
+			User user)
+		throws Exception {
+
+		return addCustomObjectDefinition(
+			0, enableLocalization, getRandomName(), objectFields, user);
 	}
 
 	public static ObjectDefinition addCustomObjectDefinition(
@@ -80,6 +90,16 @@ public class ObjectDefinitionTestUtil {
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			true, ObjectDefinitionConstants.SCOPE_COMPANY,
 			ObjectDefinitionConstants.STORAGE_TYPE_DEFAULT, objectFields);
+	}
+
+	public static ObjectDefinition addCustomObjectDefinition(
+			long objectFolderId, boolean enableLocalization, String name,
+			List<ObjectField> objectFields, User user)
+		throws Exception {
+
+		return addCustomObjectDefinition(
+			objectFolderId, enableLocalization, name, objectFields,
+			user.getUserId());
 	}
 
 	public static ObjectDefinition addCustomObjectDefinition(String name)
@@ -179,6 +199,37 @@ public class ObjectDefinitionTestUtil {
 	}
 
 	public static ObjectDefinition publishObjectDefinition(
+			boolean enableLocalization, List<ObjectField> objectFields,
+			User user)
+		throws Exception {
+
+		ObjectDefinition objectDefinition = addCustomObjectDefinition(
+			enableLocalization, objectFields, user);
+
+		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
+			new TextObjectFieldBuilder(
+			).userId(
+				user.getUserId()
+			).labelMap(
+				LocalizedMapUtil.getLocalizedMap("Able")
+			).name(
+				"able"
+			).objectDefinitionId(
+				objectDefinition.getObjectDefinitionId()
+			).required(
+				false
+			).build());
+
+		ObjectDefinitionLocalServiceUtil.updateTitleObjectFieldId(
+			objectDefinition.getObjectDefinitionId(),
+			objectField.getObjectFieldId());
+
+		return ObjectDefinitionLocalServiceUtil.publishCustomObjectDefinition(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId());
+	}
+
+	public static ObjectDefinition publishObjectDefinition(
 			boolean localized, String name, List<ObjectField> objectFields,
 			String scope, long userId)
 		throws Exception {
@@ -236,6 +287,12 @@ public class ObjectDefinitionTestUtil {
 
 		return publishObjectDefinition(
 			false, name, objectFields, scope, userId);
+	}
+
+	public static ObjectDefinition publishObjectDefinition(User user)
+		throws Exception {
+
+		return publishObjectDefinition(false, Collections.emptyList(), user);
 	}
 
 }
