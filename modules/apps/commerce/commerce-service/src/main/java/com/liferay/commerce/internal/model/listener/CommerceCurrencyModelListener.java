@@ -27,7 +27,7 @@ public class CommerceCurrencyModelListener
 	public void onBeforeRemove(CommerceCurrency commerceCurrency) {
 		try {
 			_commercePriceListLocalService.updateCommercePriceListCurrencies(
-				commerceCurrency.getCode());
+				commerceCurrency.getCode(), commerceCurrency.getCompanyId());
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
