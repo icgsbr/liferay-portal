@@ -1047,11 +1047,12 @@ public class CommercePriceListLocalServiceWrapper
 	}
 
 	@Override
-	public void updateCommercePriceListCurrencies(String commerceCurrencyCode)
+	public void updateCommercePriceListCurrencies(
+			String commerceCurrencyCode, long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_commercePriceListLocalService.updateCommercePriceListCurrencies(
-			commerceCurrencyCode);
+			commerceCurrencyCode, companyId);
 	}
 
 	@Override

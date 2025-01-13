@@ -687,7 +687,8 @@ public interface CommercePriceListLocalService
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException;
 
-	public void updateCommercePriceListCurrencies(String commerceCurrencyCode)
+	public void updateCommercePriceListCurrencies(
+			String commerceCurrencyCode, long companyId)
 		throws PortalException;
 
 	@Indexable(type = IndexableType.REINDEX)
